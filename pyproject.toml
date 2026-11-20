@@ -1,0 +1,11 @@
+[project]
+name = "cybertrace"
+version = "0.1.0"
+description = "Evidence-driven reconstruction from volatile memory"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.142.2",
+    "python-multipart>=0.0.32",
+    "uvicorn[standard]>=0.54.0",
+    "volatility3>=2.28.2",
+]
