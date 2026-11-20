@@ -153,12 +153,21 @@ uv run python -m unittest discover -s tests -v
 
 The tests use temporary data and a fake command-line program to verify runner behavior and deterministic downstream processing. Fixture artifacts are test-only; they are not used to populate an investigation.
 
-## Limitations and next steps
+## Validation and Limitations
 
-- No successful run against a real Windows memory image was possible during the foundation build because none was provided.
-- Supported JSON table layouts are normalized deterministically; unusual Volatility renderer shapes may need an adapter, while original raw output remains available.
-- PID/PPID matches establish correlations only, not causation. A possible sequence is a review hypothesis, not a finding of confirmed compromise.
-- Volatility may need to download symbol files and can consume substantial time, CPU, memory, and disk.
-- The current background job runs inside the web process and will not survive a process restart.
-- Authentication, case isolation, encryption at rest, and evidence-retention controls are not implemented. Do not expose this foundation to untrusted users or upload sensitive captures to a shared deployment.
-- Local SQLite, image files, and plugin outputs are development-MVP storage; configure managed persistence and access controls before relying on a published deployment.# CyberTrace-Windows-Memory-Forensics
+### Real-World Validation
+
+- Successfully executed CyberTrace against a real Windows memory image uploaded during local testing.
+- Verified memory-image ingestion, Volatility 3 plugin execution, forensic artifact extraction, evidence processing, and attack reconstruction.
+- Generated investigation results and a forensic report from the analyzed memory image.
+
+### Current Limitations and Future Improvements
+
+- Supported JSON table layouts are normalized deterministically. Unusual Volatility renderer shapes may require additional adapters, while original raw output remains available.
+- PID/PPID matches establish correlations, not causation. Possible attack sequences are investigative hypotheses, not confirmed findings of compromise.
+- Volatility may need to download symbol files and can consume substantial time, CPU, memory, and disk resources.
+- Background jobs currently run inside the web process and may not survive a process restart.
+- Authentication, case isolation, encryption at rest, and evidence-retention controls are not implemented.
+- Local SQLite, image files, and plugin outputs are development-MVP storage. Managed persistence and access controls are necessary before production deployment.
+
+**Validation scope:** Real Windows memory-image execution has been demonstrated locally. This does not imply validation across all Windows versions, memory acquisition methods, or image sizes.
