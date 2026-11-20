@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b111a" />
+    <meta
+      name="description"
+      content="CyberTrace is an evidence-driven volatile-memory investigation workspace."
+    />
+    <title>CyberTrace | Memory Investigation</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="CyberTrace home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M16 3.5 27 9.8v12.4L16 28.5 5 22.2V9.8L16 3.5Z" stroke="currentColor" stroke-width="1.7"/>
+              <path d="m11 16 3.2 3.2L21.5 12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>
+            <strong>CyberTrace</strong>
+            <small>MEMORY FORENSICS</small>
+          </span>
+        </a>
+
+        <div class="workspace-label">INVESTIGATION</div>
+        <nav aria-label="Primary navigation">
+          <a class="nav-link active" href="#case-workspace" data-view="overview">
+            <span class="nav-icon">⌂</span><span>Case workspace</span>
+          </a>
+          <a class="nav-link" href="#process-view" data-view="processes">
+            <span class="nav-icon">⌘</span><span>Process explorer</span>
+          </a>
+          <a class="nav-link" href="#evidence-view" data-view="evidence">
+            <span class="nav-icon">◈</span><span>Evidence</span>
+          </a>
+          <a class="nav-link" href="#graph-view" data-view="graph">
+            <span class="nav-icon">◎</span><span>Evidence graph</span>
+          </a>
+          <a class="nav-link" href="#timeline-view" data-view="timeline">
+            <span class="nav-icon">◷</span><span>Timeline</span>
+          </a>
+          <a class="nav-link" href="#reconstruction-view" data-view="reconstruction">
+            <span class="nav-icon">⤴</span><span>Reconstruction</span>
+          </a>
+          <a class="nav-link" href="#report-view" data-view="report">
+            <span class="nav-icon">▤</span><span>Report</span>
+          </a>
+          <a class="nav-link" href="#benchmark-view" data-view="benchmarks">
+            <span class="nav-icon">▥</span><span>Benchmarks</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="sidebar-status">
+            <span class="status-dot" id="volatility-dot"></span>
+            <span>
+              <strong id="volatility-status">Checking Volatility</strong>
+              <small id="volatility-detail">Runtime availability</small>
+            </span>
+          </div>
+          <div class="sidebar-version">DEFENSIVE DFIR MVP <span>BUILD 01</span></div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="case-workspace">
+        <header class="topbar">
+          <div class="breadcrumb"><span>CyberTrace</span><span class="crumb-divider">/</span><strong id="breadcrumb-page">Case workspace</strong></div>
+          <div class="topbar-right">
+            <div class="global-search-wrap">
+            <label class="global-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="global-search" type="search" placeholder="Search evidence…" aria-label="Search evidence in selected case" />
+              <kbd>/</kbd>
+            </label>
+            <div id="global-search-results" class="search-results" hidden></div>
+            </div>
+            <span class="environment-tag"><span class="small-dot"></span> LOCAL INVESTIGATION</span>
+            <span class="topbar-divider"></span>
+            <span class="avatar" aria-hidden="true">CT</span>
+          </div>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> DIGITAL FORENSICS / VOLATILE MEMORY</div>
+            <h1 id="page-title">Investigation workspace</h1>
+            <p class="page-subtitle" id="page-subtitle">Create a case, attach a memory image, and run selected Volatility 3 plugins.</p>
+          </div>
+          <button class="button button-primary" id="new-case-button" type="button">
+            <span class="button-plus">+</span> New case
+          </button>
+        </section>
+
+        <section class="status-banner" aria-label="Implementation status">
+          <span class="banner-indicator"></span>
+          <div>
+            <strong>Evidence-driven investigation pipeline</strong>
+            <span>Only uploaded-image Volatility runs populate investigations. Test fixtures are excluded from live case data; every possible sequence remains investigator-verifiable.</span>
+          </div>
+          <span class="banner-code">NO SYNTHETIC FINDINGS</span>
+        </section>
+
+        <section class="workspace-grid" id="overview-view">
+          <div class="main-column">
+            <section class="panel cases-panel" aria-labelledby="cases-title">
+              <div class="panel-heading">
+                <div>
+                  <div class="section-kicker">CASE MANAGEMENT</div>
+                  <h2 id="cases-title">Your cases</h2>
+                </div>
+                <span class="count-pill" id="case-count">0 cases</span>
+              </div>
+              <div id="case-list" class="case-list">
+                <div class="loading-state">Loading cases…</div>
+              </div>
+            </section>
+
+            <section class="panel investigation-panel" aria-labelledby="active-case-title">
+              <div class="panel-heading">
+                <div>
+                  <div class="section-kicker">ACTIVE INVESTIGATION</div>
+                  <h2 id="active-case-title">Select or create a case</h2>
+                </div>
+                <span class="state-badge" id="case-state"><span></span> NO CASE SELECTED</span>
+              </div>
+              <div id="case-detail">
+                <div class="empty-workspace">
+                  <div class="empty-icon" aria-hidden="true">⌕</div>
+                  <h3>Start with a case</h3>
+                  <p>Create an investigation to upload a memory image and run forensic plugins. Findings will only appear when they come from actual plugin output.</p>
+                  <button class="button button-secondary" id="empty-create-button" type="button">Create a case</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel analysis-panel" id="analysis-panel" aria-labelledby="analysis-title" hidden>
+              <div class="panel-heading">
+                <div>
+                  <div class="section-kicker">VOLATILITY 3</div>
+                  <h2 id="analysis-title">Plugin execution</h2>
+                </div>
+                <span class="state-badge" id="analysis-state"><span></span> NOT STARTED</span>
+              </div>
+              <div class="analysis-summary" id="analysis-summary"></div>
+              <div class="metric-grid" id="analysis-metrics"></div>
+              <p class="os-summary" id="os-summary">OS information will appear when windows.info reports identifiable values.</p>
+              <div class="plugin-results" id="plugin-results"></div>
+            </section>
+          </div>
+
+          <aside class="side-column">
+            <section class="panel pipeline-panel" aria-labelledby="pipeline-title">
+              <div class="section-kicker">ANALYSIS PIPELINE</div>
+              <h2 id="pipeline-title">Evidence path</h2>
+              <div class="pipeline">
+                <div class="pipeline-step current">
+                  <span class="pipeline-node">01</span>
+                  <span><strong>Memory image</strong><small>Upload and SHA-256 record</small></span>
+            <span class="step-state">BUILT</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step current">
+                  <span class="pipeline-node">02</span>
+                  <span><strong>Volatility 3</strong><small>Run selected plugins</small></span>
+            <span class="step-state">BUILT</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step current">
+                  <span class="pipeline-node">03</span>
+                  <span><strong>Normalize evidence</strong><small>Structured artifact model</small></span>
+                  <span class="step-state">BUILT</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step current">
+                  <span class="pipeline-node">04</span>
+                  <span><strong>Correlate &amp; visualize</strong><small>Links, timelines, and evidence graph</small></span>
+                  <span class="step-state">BUILT</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step current">
+                  <span class="pipeline-node">05</span>
+                  <span><strong>Possible sequence &amp; report</strong><small>Hypothesis with evidence and limitations</small></span>
+                  <span class="step-state">BUILT</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel scope-panel">
+              <div class="scope-icon" aria-hidden="true">i</div>
+              <div>
+                <h3>Evidence handling</h3>
+                <p>Images stay in this workspace. Their SHA-256 hash is recorded at upload. Raw plugin output is retained separately for provenance.</p>
+              </div>
+            </section>
+
+            <section class="panel plugin-info-panel">
+              <div class="section-kicker">SUPPORTED PLUGINS</div>
+              <h2>Windows artifacts</h2>
+              <div class="plugin-chip-list" id="plugin-chip-list"><span class="loading-state">Loading plugins…</span></div>
+              <p class="plugin-info-note">Plugin failures are shown individually; one failure does not stop the remaining plugins.</p>
+            </section>
+          </aside>
+        </section>
+
+        <section class="module-view" id="process-view" hidden aria-labelledby="process-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">OBSERVED ARTIFACTS</div><h2 id="process-view-title">Process explorer</h2><p>Process records and parent links extracted from this analysis run.</p></div>
+            <span class="count-pill" id="process-count">0 processes</span>
+          </div>
+          <div class="panel module-panel">
+            <div class="module-toolbar">
+              <input id="process-query" type="search" placeholder="Filter by name, PID, or evidence…" aria-label="Filter processes" />
+              <span class="toolbar-note">Select a process to inspect its source artifact and relationships.</span>
+            </div>
+            <div id="process-tree" class="process-tree"><div class="empty-module">Select an analyzed case to view process artifacts.</div></div>
+          </div>
+        </section>
+
+        <section class="module-view" id="evidence-view" hidden aria-labelledby="evidence-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">OBSERVED / CORRELATED</div><h2 id="evidence-view-title">Evidence records</h2><p>Every observed artifact retains its source plugin and raw row.</p></div>
+            <span class="count-pill" id="evidence-count">0 records</span>
+          </div>
+          <div class="panel module-panel">
+            <div class="module-toolbar">
+              <select id="evidence-type-filter" aria-label="Filter evidence by type">
+                <option value="">All evidence types</option>
+                <option value="process">Process</option><option value="network">Network</option>
+                <option value="dll">DLL</option><option value="command">Command</option>
+                <option value="memory">Memory</option><option value="system">System</option>
+              </select>
+              <select id="evidence-relationship-filter" aria-label="Filter evidence by relationship">
+                <option value="">All relationships</option>
+                <option value="PARENT_CHILD">Parent / child</option>
+                <option value="PROCESS_CONNECTS_TO">Process / network</option>
+                <option value="PROCESS_LOADS_DLL">Process / DLL</option>
+                <option value="PROCESS_EXECUTED_WITH_COMMAND">Process / command</option>
+              </select>
+              <span class="toolbar-note">Filters use only extracted fields and recorded joins.</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Evidence ID</th><th>Type</th><th>PID / PPID</th><th>Entity</th><th>Source plugin</th><th>Class</th></tr></thead>
+                <tbody id="evidence-table-body"><tr><td colspan="6" class="empty-table">No evidence loaded.</td></tr></tbody>
+              </table>
+            </div>
+            <div class="table-pagination"><button class="button button-quiet" id="evidence-prev" type="button">Previous</button><span id="evidence-page-label">Page 1</span><button class="button button-quiet" id="evidence-next" type="button">Next</button></div>
+          </div>
+        </section>
+
+        <section class="module-view" id="graph-view" hidden aria-labelledby="graph-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">EXPLAINABLE RELATIONSHIPS</div><h2 id="graph-view-title">Evidence graph</h2><p>Each edge is a deterministic join with a reason and supporting Evidence IDs.</p></div>
+            <span class="count-pill" id="graph-count">0 nodes · 0 edges</span>
+          </div>
+          <div class="graph-layout">
+            <div class="panel graph-panel">
+              <div class="module-toolbar"><span class="toolbar-note">Select a node or edge to inspect the evidence behind it.</span><span class="graph-legend"><i class="legend-process"></i>Process <i class="legend-network"></i>Network <i class="legend-file"></i>DLL / command</span></div>
+              <div class="graph-scroll"><svg id="evidence-graph" role="img" aria-label="Evidence relationship graph"></svg></div>
+              <div id="graph-empty" class="empty-module">Complete an analysis to build an evidence graph.</div>
+            </div>
+            <aside class="panel inspector-panel" id="graph-inspector">
+              <div class="section-kicker">PROVENANCE</div><h3>Evidence inspector</h3>
+              <div id="inspector-content" class="inspector-content"><p>Select a graph node, edge, or evidence record to inspect its source.</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="module-view" id="timeline-view" hidden aria-labelledby="timeline-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">TIME ORDERED EVIDENCE</div><h2 id="timeline-view-title">Forensic timeline</h2><p>Unknown or unparseable timestamps remain untimed; CyberTrace does not infer them.</p></div>
+            <span class="count-pill" id="timeline-count">0 events</span>
+          </div>
+          <div class="panel module-panel">
+            <div class="module-toolbar">
+              <select id="timeline-type-filter" aria-label="Filter timeline by artifact type">
+                <option value="">All event types</option><option value="Process observation">Processes</option>
+                <option value="Network artifact">Network</option><option value="DLL association">DLL</option>
+                <option value="Command-line artifact">Commands</option><option value="Memory artifact">Memory</option>
+                <option value="malfind">Suspicious (malfind observations)</option>
+              </select>
+              <span class="toolbar-note">Every item links to its observed Evidence ID.</span>
+            </div>
+            <div id="timeline-list" class="timeline-list"><div class="empty-module">Complete an analysis to build the timeline.</div></div>
+          </div>
+        </section>
+
+        <section class="module-view" id="reconstruction-view" hidden aria-labelledby="reconstruction-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">INVESTIGATOR REVIEW</div><h2 id="reconstruction-view-title">Possible Attack Sequence</h2><p>Rule-based hypotheses are interpretations, not findings of confirmed compromise.</p></div>
+            <span class="state-badge"><span></span> HYPOTHESIS</span>
+          </div>
+          <div id="hypothesis-list" class="hypothesis-list"><div class="empty-module">Complete an analysis to evaluate the deterministic sequence rules.</div></div>
+        </section>
+
+        <section class="module-view" id="report-view" hidden aria-labelledby="report-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">EXPORT</div><h2 id="report-view-title">Investigation report</h2><p>Generate a report for the selected analysis run, including its sources, relationships, hypotheses, and limitations.</p></div>
+          </div>
+          <div class="panel report-panel">
+            <div class="report-cover-icon" aria-hidden="true">▤</div>
+            <div class="report-copy"><h3>Evidence-backed case report</h3><p>Report contents are drawn from the selected case and analysis run. Missing timestamps and plugin failures are kept visible.</p><ul><li>Case and source-image identifiers</li><li>Evidence statistics, findings, and timeline</li><li>Relationship reasons and supporting Evidence IDs</li><li>Possible-sequence rationale and limitations</li></ul></div>
+            <button class="button button-primary" id="download-report" type="button" disabled>Download Markdown report</button>
+          </div>
+        </section>
+
+        <section class="module-view" id="benchmark-view" hidden aria-labelledby="benchmark-view-title">
+          <div class="module-header">
+            <div><div class="section-kicker">MEASUREMENT PLAN</div><h2 id="benchmark-view-title">Benchmarking</h2><p>No performance or accuracy values are reported until they are measured against authorized captures and documented ground truth.</p></div>
+            <span class="state-badge"><span></span> NO RESULTS RECORDED</span>
+          </div>
+          <div class="panel module-panel">
+            <div class="module-toolbar">
+              <span class="toolbar-note">Populate this table only from repeatable experiments. Synthetic fixtures are for tests, not benchmark scores.</span>
+              <a class="inspector-link" href="/benchmarking" target="_blank" rel="noopener">Benchmark methodology</a>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Measure</th><th>Method</th><th>Required evidence</th><th>Result</th></tr></thead>
+                <tbody>
+                  <tr><td>Artifact coverage</td><td>Supported artifacts extracted per plugin</td><td>Authorized capture + plugin configuration</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Extraction completeness</td><td>Extracted artifacts / labeled expected artifacts</td><td>Ground-truth artifact inventory</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Temporal ordering</td><td>Correctly ordered comparable timestamps</td><td>Trusted event times</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Relationship accuracy</td><td>Correct deterministic links / evaluated links</td><td>Reviewed relationship labels</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Reconstruction accuracy</td><td>Supported sequence steps / labeled steps</td><td>Analyst-reviewed sequence ground truth</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Evidence traceability</td><td>Claims with source Evidence IDs / total claims</td><td>Generated report and evidence review</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>False relationship rate</td><td>Reviewed false links / all generated links</td><td>Analyst-reviewed relationship labels</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Investigation time</td><td>Manual and CyberTrace task time on the same case</td><td>Repeatable task protocol and timings</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>Explainability</td><td>Links and hypotheses with reasons and evidence</td><td>Generated relationship and hypothesis records</td><td><span class="benchmark-status">Not measured</span></td></tr>
+                  <tr><td>LLM independence</td><td>Core pipeline completion without an LLM</td><td>Application run and configuration record</td><td><span class="benchmark-status">No LLM used</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <span>CyberTrace · Evidence-driven attack reconstruction from volatile memory</span>
+          <span>ANALYSIS IS NOT A VERDICT</span>
+        </footer>
+      </main>
+    </div>
+
+    <dialog class="modal" id="case-dialog" aria-labelledby="dialog-title">
+      <form id="case-form" class="modal-card">
+        <div class="modal-heading">
+          <div>
+            <div class="section-kicker">NEW INVESTIGATION</div>
+            <h2 id="dialog-title">Create a case</h2>
+          </div>
+          <button class="icon-button" id="dialog-close" type="button" aria-label="Close dialog">×</button>
+        </div>
+        <label class="field-label" for="case-name">Case name</label>
+        <input id="case-name" name="name" maxlength="120" required placeholder="e.g. Endpoint memory review" autocomplete="off" />
+        <p class="field-hint">Use a neutral identifier. The case ID is generated automatically.</p>
+        <div class="modal-actions">
+          <button class="button button-quiet" id="dialog-cancel" type="button">Cancel</button>
+          <button class="button button-primary" id="create-case-submit" type="submit">Create case</button>
+        </div>
+        <p class="form-error" id="case-form-error" role="alert"></p>
+      </form>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>

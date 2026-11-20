@@ -1,0 +1,1130 @@
+# CYBERTRACE — MASTER BUILD PROMPT
+
+You are the lead software architect, Python developer, DFIR/memory-forensics engineer, backend engineer, frontend engineer, and QA engineer for this project.
+
+Build a complete working MVP called:
+
+**CyberTrace: Evidence-Driven Attack Reconstruction from Volatile Memory**
+
+This is a defensive digital-forensics and memory-analysis platform.
+
+The goal is NOT to build another simple Volatility dashboard.
+
+The core research idea is:
+
+**Volatile Memory → Forensic Evidence → Evidence Correlation → Timeline → Evidence Graph → Possible Attack Reconstruction → Investigator Verification**
+
+---
+
+# 1. IMPORTANT DEVELOPMENT RULES
+
+Before writing significant code:
+
+1. Understand the complete requirements below.
+2. Create the project architecture.
+3. Create a clear implementation checklist.
+4. Build the system incrementally.
+5. After every major module, run tests and fix errors.
+6. Never replace real functionality with fake/mock forensic results.
+7. Do not claim 100% accuracy.
+8. Do not invent forensic evidence.
+9. Preserve evidence provenance throughout the entire pipeline.
+10. The core system MUST work without an LLM.
+11. An LLM may only be used later as an optional explanation layer.
+12. Do not implement offensive malware, ransomware, exploitation, persistence, credential theft, or attack-generation functionality.
+13. This is strictly a defensive forensic investigation platform.
+
+If a feature cannot be implemented reliably within the MVP scope, implement the correct foundation and clearly document the limitation instead of faking the feature.
+
+---
+
+# 2. CORE PROBLEM
+
+Traditional memory-forensics workflows often require investigators to manually inspect outputs from multiple forensic plugins and mentally correlate them.
+
+CyberTrace should automate the correlation process.
+
+For example:
+
+Volatility may independently reveal:
+
+* explorer.exe
+* powershell.exe
+* suspicious.exe
+* a DLL associated with suspicious.exe
+* a network connection associated with suspicious.exe
+
+CyberTrace should correlate these observations:
+
+explorer.exe
+↓
+powershell.exe
+↓
+suspicious.exe
+↓
+suspicious.dll
+↓
+external network endpoint
+
+The system must NOT automatically state:
+
+"The machine was definitely compromised."
+
+Instead it should produce:
+
+"Possible Attack Sequence"
+
+and show the evidence supporting every step.
+
+---
+
+# 3. SYSTEM ARCHITECTURE
+
+Implement this architecture:
+
+Memory Image
+↓
+Volatility 3
+↓
+Artifact Extraction
+↓
+Evidence Normalization
+↓
+Evidence Database
+↓
+Correlation Engine
+↓
+Timeline Engine
+↓
+Evidence Graph
+↓
+Attack Reconstruction / Hypothesis Engine
+↓
+Investigator Dashboard
+↓
+Investigation Report
+
+---
+
+# 4. TECHNOLOGY STACK
+
+Use:
+
+Backend:
+
+* Python
+* FastAPI
+
+Forensics:
+
+* Volatility 3
+
+Database:
+
+* SQLite
+
+Data validation:
+
+* Pydantic
+
+Graph processing:
+
+* NetworkX
+
+Interactive graph:
+
+* Cytoscape.js, vis-network, or another lightweight browser-compatible graph library
+
+Frontend:
+
+* HTML
+* CSS
+* JavaScript
+
+Do NOT introduce unnecessary frameworks unless they clearly improve the project.
+
+Keep the architecture simple enough to run reliably.
+
+---
+
+# 5. PROJECT STRUCTURE
+
+Create a clean structure similar to:
+
+CyberTrace/
+│
+├── backend/
+│   ├── app.py
+│   ├── config.py
+│   │
+│   ├── volatility/
+│   │   ├── runner.py
+│   │   ├── plugins.py
+│   │   └── parser.py
+│   │
+│   ├── evidence/
+│   │   ├── schema.py
+│   │   ├── normalizer.py
+│   │   └── database.py
+│   │
+│   ├── correlation/
+│   │   ├── process_rules.py
+│   │   ├── network_rules.py
+│   │   ├── dll_rules.py
+│   │   ├── command_rules.py
+│   │   └── correlation_engine.py
+│   │
+│   ├── timeline/
+│   │   └── timeline_engine.py
+│   │
+│   ├── reconstruction/
+│   │   ├── graph_builder.py
+│   │   ├── hypothesis.py
+│   │   └── attack_story.py
+│   │
+│   └── reports/
+│       └── report_generator.py
+│
+├── frontend/
+│   ├── index.html
+│   ├── css/
+│   └── js/
+│
+├── data/
+│   ├── raw/
+│   ├── volatility_output/
+│   └── normalized/
+│
+├── tests/
+│
+├── docs/
+│
+├── requirements.txt
+├── README.md
+└── .gitignore
+
+Adapt this structure if necessary, but maintain clear separation between forensic extraction, evidence processing, correlation, reconstruction, and UI.
+
+---
+
+# 6. VOLATILITY 3 INTEGRATION
+
+Integrate real Volatility 3.
+
+Initial plugins:
+
+* windows.info
+* windows.pslist
+* windows.pstree
+* windows.cmdline
+* windows.netscan
+* windows.dlllist
+* windows.malfind
+
+Do NOT attempt to integrate dozens of plugins initially.
+
+Create a reusable Volatility runner.
+
+It should:
+
+1. Accept a memory-image path.
+2. Validate that the file exists.
+3. Execute selected Volatility plugins.
+4. Capture stdout/stderr.
+5. Handle plugin failures gracefully.
+6. Preserve raw plugin output.
+7. Convert usable results into structured data.
+8. Record which plugin produced each artifact.
+9. Store analysis status and errors.
+
+The system should never silently discard failed plugin execution.
+
+---
+
+# 7. EVIDENCE MODEL
+
+Create a normalized evidence model.
+
+Every artifact must have a unique Evidence ID.
+
+Example:
+
+{
+"evidence_id": "EV-001",
+"case_id": "CASE-001",
+"type": "process",
+"source_plugin": "windows.pslist",
+"pid": 4120,
+"ppid": 3012,
+"process_name": "powershell.exe",
+"timestamp": null,
+"artifact": {},
+"confidence": "observed"
+}
+
+Possible evidence types:
+
+* process
+* network
+* dll
+* command
+* memory
+* system
+* timeline_event
+
+Preserve the original/raw artifact wherever possible.
+
+---
+
+# 8. DATABASE
+
+Use SQLite.
+
+Create tables for:
+
+cases
+
+evidence
+
+relationships
+
+events
+
+hypotheses
+
+analysis_runs
+
+Every table should have sensible IDs, timestamps and relationships.
+
+The database must allow an investigator to trace:
+
+Hypothesis
+↓
+Relationship
+↓
+Evidence
+↓
+Source Plugin
+↓
+Raw Forensic Output
+
+---
+
+# 9. CORRELATION ENGINE
+
+This is one of the most important components.
+
+Implement deterministic correlation rules.
+
+## Rule 1 — Parent/Child
+
+If:
+
+child.PPID == parent.PID
+
+create:
+
+PARENT_CHILD
+
+Example:
+
+powershell.exe
+↓
+suspicious.exe
+
+Store:
+
+* source evidence
+* target evidence
+* relationship type
+* reason
+* source plugin
+* confidence
+
+---
+
+## Rule 2 — Process / Network
+
+If:
+
+network.pid == process.pid
+
+create:
+
+PROCESS_CONNECTS_TO
+
+Example:
+
+suspicious.exe
+↓
+10.x.x.x:443
+
+---
+
+## Rule 3 — Process / DLL
+
+If:
+
+dll.pid == process.pid
+
+create:
+
+PROCESS_LOADS_DLL
+
+---
+
+## Rule 4 — Process / Command
+
+If:
+
+cmdline.pid == process.pid
+
+create:
+
+PROCESS_EXECUTED_WITH_COMMAND
+
+---
+
+# 10. EVIDENCE PROVENANCE
+
+THIS IS A CORE FEATURE.
+
+Every graph relationship must be explainable.
+
+For example:
+
+powershell.exe
+|
+| PARENT_CHILD
+↓
+suspicious.exe
+
+When the investigator clicks the relationship, display:
+
+Relationship:
+PARENT_CHILD
+
+Reason:
+PID 4120 has PPID 3012.
+
+Source Plugin:
+windows.pstree
+
+Evidence IDs:
+EV-019
+EV-020
+
+Confidence:
+Observed / Correlated
+
+Never create a relationship without recording why it exists.
+
+---
+
+# 11. THREE-LEVEL EVIDENCE MODEL
+
+CyberTrace must distinguish:
+
+## OBSERVED
+
+Directly present in forensic evidence.
+
+Example:
+
+"PID 4120 exists."
+
+## CORRELATED
+
+Relationship created by joining multiple observed artifacts.
+
+Example:
+
+"PID 4120 is associated with network connection EV-042."
+
+## HYPOTHESIS
+
+An investigator-facing interpretation.
+
+Example:
+
+"The observed process and network activity may represent a related execution and communication sequence."
+
+Use these labels throughout the UI.
+
+---
+
+# 12. TIMELINE ENGINE
+
+Create a normalized forensic timeline.
+
+Each event should contain:
+
+* event ID
+* timestamp
+* event type
+* description
+* evidence ID
+* source plugin
+* related PID
+* confidence
+
+Display events chronologically.
+
+Example:
+
+10:31:02
+Process Created
+explorer.exe
+
+10:31:05
+Process Created
+powershell.exe
+
+10:31:08
+Process Created
+suspicious.exe
+
+10:31:10
+Network Connection
+suspicious.exe → external endpoint
+
+10:31:13
+DLL Association
+suspicious.exe → suspicious.dll
+
+Allow filtering by:
+
+* All
+* Processes
+* Network
+* DLL
+* Commands
+* Suspicious
+
+Every event must link back to evidence.
+
+---
+
+# 13. EVIDENCE GRAPH
+
+Create an interactive graph.
+
+Nodes can represent:
+
+* processes
+* DLLs
+* network endpoints
+* commands
+* evidence entities
+
+Edges represent:
+
+* PARENT_CHILD
+* CONNECTS_TO
+* LOADS_DLL
+* EXECUTED_WITH
+
+Every edge must be clickable.
+
+Clicking an edge must open an Evidence Inspector showing:
+
+* relationship type
+* reason
+* source plugin
+* evidence IDs
+* source artifacts
+* confidence
+
+The graph should visually distinguish entity types.
+
+---
+
+# 14. ATTACK RECONSTRUCTION
+
+Build a deterministic reconstruction engine.
+
+It should identify connected sequences such as:
+
+Process Creation
+↓
+Command Execution
+↓
+Child Process
+↓
+Memory/DLL Association
+↓
+Network Communication
+
+The output must be titled:
+
+"Possible Attack Sequence"
+
+NOT:
+
+"Confirmed Attack"
+
+Every step must contain supporting Evidence IDs.
+
+Example:
+
+Possible Attack Sequence
+
+Stage 1:
+PowerShell execution
+
+Evidence:
+EV-004
+
+Stage 2:
+Child process creation
+
+Evidence:
+EV-019
+
+Stage 3:
+DLL association
+
+Evidence:
+EV-031
+
+Stage 4:
+External communication
+
+Evidence:
+EV-047
+
+---
+
+# 15. HYPOTHESIS ENGINE
+
+Create a lightweight rule-based hypothesis engine.
+
+Do NOT use an LLM for the core logic.
+
+Example:
+
+IF:
+
+process relationship exists
+AND
+command-line evidence exists
+AND
+network relationship exists
+
+THEN:
+
+create a possible execution-and-communication hypothesis.
+
+The system must show:
+
+* hypothesis description
+* supporting evidence
+* supporting relationships
+* confidence/rationale
+* limitations
+
+Do not fabricate certainty.
+
+---
+
+# 16. INVESTIGATOR DASHBOARD
+
+Build a professional cybersecurity/DFIR interface.
+
+Use a modern dark SOC-style design.
+
+Main pages:
+
+1. Case Overview
+2. Process Explorer
+3. Evidence Graph
+4. Timeline
+5. Attack Reconstruction
+6. Evidence Inspector
+
+---
+
+# 17. CASE OVERVIEW
+
+Display:
+
+* Case ID
+* Memory image name
+* OS information if available
+* Analysis start/end time
+* Evidence count
+* Process count
+* Network connection count
+* DLL count
+* Suspicious/anomalous entities
+
+Use clean cards.
+
+---
+
+# 18. PROCESS EXPLORER
+
+Display an interactive process tree.
+
+Example:
+
+explorer.exe
+|
+├── chrome.exe
+|
+└── powershell.exe
+|
+└── suspicious.exe
+
+Clicking a process should display:
+
+* PID
+* PPID
+* process name
+* command line
+* timestamps
+* DLLs
+* network connections
+* evidence IDs
+
+---
+
+# 19. EVIDENCE INSPECTOR
+
+This should be one of the strongest UI features.
+
+When an investigator clicks an artifact, show:
+
+Evidence ID
+Type
+Source Plugin
+PID
+PPID
+Timestamp
+Artifact Details
+Relationships
+Related Evidence
+Raw Source
+
+Make provenance obvious.
+
+---
+
+# 20. SEARCH
+
+Add a global evidence search.
+
+Allow searching by:
+
+* PID
+* process name
+* DLL
+* IP address
+* port
+* Evidence ID
+* command
+* relationship type
+
+---
+
+# 21. FILTERING
+
+Allow filtering by:
+
+* evidence type
+* process
+* PID
+* timestamp
+* relationship
+* confidence
+* source plugin
+
+---
+
+# 22. REPORT GENERATION
+
+Create an investigation report containing:
+
+1. Case information
+2. Analysis summary
+3. Evidence statistics
+4. Process findings
+5. Network findings
+6. Timeline
+7. Evidence relationships
+8. Possible attack reconstruction
+9. Supporting evidence
+10. Limitations
+
+Clearly label hypotheses as hypotheses.
+
+---
+
+# 23. OPTIONAL LLM LAYER
+
+Only implement this AFTER the deterministic system is working.
+
+The LLM should NOT analyze raw memory directly.
+
+Instead:
+
+Structured Evidence
+↓
+Correlations
+↓
+Attack Hypothesis
+↓
+LLM
+↓
+Human-readable explanation
+
+The LLM may:
+
+* explain relationships
+* summarize a timeline
+* explain why a hypothesis was generated
+* answer questions about already-extracted evidence
+
+The LLM must NOT:
+
+* invent evidence
+* invent timestamps
+* invent processes
+* invent network connections
+* override forensic evidence
+* determine that an attack definitely occurred
+
+Prefer a local model through Ollama if practical.
+
+---
+
+# 24. SECURITY REQUIREMENTS
+
+This project is defensive.
+
+Do NOT implement:
+
+* malware generation
+* ransomware
+* credential theft
+* persistence mechanisms
+* exploitation
+* payload delivery
+* command-and-control implementation
+* evasion techniques
+
+The system should only analyze forensic artifacts.
+
+---
+
+# 25. ERROR HANDLING
+
+Handle:
+
+* missing memory image
+* unsupported memory image
+* failed Volatility plugin
+* malformed plugin output
+* missing timestamps
+* missing PID
+* incomplete artifacts
+* database errors
+* graph-generation errors
+* frontend/backend API errors
+
+Never crash the entire investigation because one plugin failed.
+
+Show clear errors to the investigator.
+
+---
+
+# 26. TESTING
+
+Create automated tests for:
+
+* evidence normalization
+* database insertion
+* parent-child correlation
+* process-network correlation
+* process-DLL correlation
+* command correlation
+* timeline ordering
+* graph creation
+* hypothesis generation
+* API endpoints
+
+Also create a small synthetic test dataset for unit tests.
+
+IMPORTANT:
+
+Synthetic test data may be used for unit testing only.
+
+The real forensic analysis pipeline must use actual Volatility output.
+
+---
+
+# 27. API ENDPOINTS
+
+Create clean APIs such as:
+
+POST /api/cases
+
+POST /api/analyze
+
+GET /api/cases/{case_id}
+
+GET /api/evidence
+
+GET /api/evidence/{evidence_id}
+
+GET /api/processes
+
+GET /api/network
+
+GET /api/timeline
+
+GET /api/relationships
+
+GET /api/graph
+
+GET /api/hypotheses
+
+GET /api/report
+
+Adapt endpoint names if needed, but maintain clean separation.
+
+---
+
+# 28. UI QUALITY
+
+The application should look like a serious DFIR/SOC investigation platform.
+
+Avoid:
+
+* default browser styling
+* excessive animations
+* childish colors
+* unnecessary gradients
+* fake statistics
+* fake threat alerts
+
+Use:
+
+* dark professional interface
+* readable typography
+* consistent spacing
+* clear hierarchy
+* responsive layout
+* interactive investigation components
+* useful empty/error states
+
+---
+
+# 29. DEMO WORKFLOW
+
+The final application must support this workflow:
+
+1. Open CyberTrace.
+2. Create a new case.
+3. Upload/select a Windows memory image.
+4. Start analysis.
+5. Show Volatility plugin execution.
+6. Show extracted evidence.
+7. Open process tree.
+8. Open evidence graph.
+9. Click an evidence-backed relationship.
+10. Inspect provenance.
+11. Open timeline.
+12. Open possible attack reconstruction.
+13. Inspect supporting evidence.
+14. Generate investigation report.
+
+This workflow must work end-to-end.
+
+---
+
+# 30. PERFORMANCE
+
+Do not unnecessarily run every Volatility plugin repeatedly.
+
+Cache analysis results where appropriate.
+
+Keep raw output and normalized evidence separate.
+
+Do not load huge datasets into the frontend at once.
+
+Use pagination or filtering where necessary.
+
+---
+
+# 31. 7-DAY IMPLEMENTATION PHASES
+
+Implement in this order.
+
+DAY 1:
+
+* project architecture
+* environment
+* Volatility integration
+* basic API
+* memory image validation
+
+DAY 2:
+
+* artifact extraction
+* normalization
+* SQLite database
+* Evidence IDs
+* provenance
+
+DAY 3:
+
+* correlation engine
+* parent-child relationships
+* network relationships
+* DLL relationships
+* command relationships
+* relationship evidence
+
+DAY 4:
+
+* timeline engine
+* event normalization
+* timeline API
+* timeline UI
+
+DAY 5:
+
+* evidence graph
+* attack reconstruction
+* hypothesis engine
+* evidence traceability
+
+DAY 6:
+
+* complete dashboard
+* Evidence Inspector
+* search
+* filters
+* report generation
+
+DAY 7:
+
+* testing
+* bug fixing
+* UI polishing
+* benchmark measurements
+* documentation
+* final demo workflow
+
+Do NOT spend the first days building decorative UI while the forensic backend is incomplete.
+
+---
+
+# 32. BENCHMARKING
+
+Prepare the application so that we can later measure:
+
+1. Artifact Coverage
+2. Extraction Completeness
+3. Temporal Ordering Accuracy
+4. Relationship Accuracy
+5. Attack Reconstruction Accuracy
+6. Evidence Traceability
+7. False Relationship Rate
+8. Investigation Time
+9. Explainability
+10. LLM Independence
+
+Do not invent benchmark values.
+
+Create a benchmark page/table that can be populated with real experimental results later.
+
+---
+
+# 33. EXISTING-TOOL COMPARISON
+
+Structure the project documentation for capability comparison against:
+
+* Volatility 3
+* Timesketch
+* volGPT
+* DFIR-Chain
+* CyberTrace
+
+Do NOT claim CyberTrace is superior unless supported by measured experiments.
+
+Focus on the intended distinction:
+
+"Evidence-driven correlation and investigator-verifiable attack reconstruction."
+
+---
+
+# 34. README
+
+Create a professional README containing:
+
+* Project title
+* Problem statement
+* Research motivation
+* Architecture
+* Features
+* Installation
+* Dependencies
+* How to run
+* How to analyze a memory image
+* API documentation
+* Screenshots/placeholders
+* Testing
+* Benchmark methodology
+* Limitations
+* Future work
+
+---
+
+# 35. DEVELOPMENT BEHAVIOR
+
+Work as an autonomous senior engineer.
+
+Do not repeatedly ask me for confirmation for ordinary implementation decisions.
+
+When a reasonable implementation choice exists, make it and document it.
+
+However, if a decision would fundamentally change the architecture, stop and explain the choice.
+
+After every major implementation phase:
+
+1. Run tests.
+2. Run the application.
+3. Inspect errors.
+4. Fix errors.
+5. Verify that previously working functionality still works.
+
+Do not move forward while the core pipeline is broken.
+
+---
+
+# 36. FIRST ACTION
+
+DO NOT immediately start generating random files.
+
+First:
+
+1. Analyze this entire specification.
+2. Create the final project architecture.
+3. Identify dependencies.
+4. Identify any Replit-specific limitations.
+5. Create a concise implementation checklist.
+6. Then begin Day 1 implementation.
+
+At the end of each major phase, provide a short status report containing:
+
+* Completed
+* Tested
+* Remaining
+* Known limitations
+* Next phase
+
+Start with **Day 1: Foundation + Volatility 3 Integration**.
+
+The final goal is a genuinely runnable CyberTrace MVP, not a UI prototype with fake forensic data.

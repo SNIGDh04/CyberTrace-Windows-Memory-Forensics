@@ -1,0 +1,2 @@
+- [API test client availability](api-test-client.md) — Starlette’s TestClient needs httpx2 in this environment; check before relying on it.
+- [Forensic evidence guardrails](forensic-evidence-guardrails.md) — Live findings require provenance; test fixtures never populate real cases; correlations are not causation.

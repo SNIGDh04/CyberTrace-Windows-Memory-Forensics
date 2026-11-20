@@ -1,0 +1,345 @@
+Continue from the current CyberTrace implementation. Do NOT restart or rebuild the project from scratch.
+
+The backend/core implementation is already in place:
+
+* Case creation
+* Memory image upload
+* SHA-256 hashing
+* Volatility 3 runner
+* Supported plugin execution
+* Raw stdout preservation
+* Parseable JSON preservation
+* Plugin-by-plugin failure persistence
+* Normalized evidence
+* Evidence relationships/correlations
+* Evidence-linked timeline
+* Hypothesis generation
+* Investigation APIs
+* Report APIs
+
+Now complete the project according to the original CyberTrace specification.
+
+## PHASE 1 — Finish Investigator UI
+
+Build and verify these investigator-facing views:
+
+1. Case Overview
+
+   * Case ID
+   * Memory image name
+   * SHA-256
+   * Image size
+   * Creation/analysis time
+   * Analysis status
+   * Plugin success/failure counts
+   * Evidence count
+   * Relationship count
+   * Timeline event count
+   * Hypothesis count
+
+2. Process Explorer
+
+   * PID
+   * PPID
+   * Process name
+   * Command line
+   * Creation time if available
+   * Suspicious indicators
+   * Evidence ID
+   * Source Volatility plugin
+
+3. Evidence Graph
+
+   * Nodes = evidence/artifacts
+   * Edges = deterministic relationships
+   * Relationship types such as:
+     PARENT_CHILD
+     CONNECTS_TO
+     LOADS_DLL
+     EXECUTED_WITH
+   * Clicking a node must open its evidence details.
+   * Clicking an edge must show:
+     source evidence
+     target evidence
+     relationship type
+     reason
+     source plugin
+     confidence/evidence level
+
+4. Timeline
+
+   * Chronological ordering
+   * Filters:
+     All
+     Process
+     Network
+     DLL
+     Command
+     Suspicious
+   * Every event must link back to Evidence ID.
+   * Do not invent timestamps.
+
+5. Attack Reconstruction
+   Clearly separate:
+
+   * OBSERVED EVIDENCE
+   * CORRELATED RELATIONSHIPS
+   * HYPOTHESIS
+
+   Never present a hypothesis as confirmed compromise.
+
+   Every hypothesis must contain:
+
+   * description
+   * supporting evidence IDs
+   * related relationships
+   * reasoning
+   * confidence/qualification
+   * limitations
+
+6. Evidence Inspector
+   Allow investigator to inspect:
+
+   * Evidence ID
+   * Artifact type
+   * Raw artifact
+   * Normalized fields
+   * Source plugin
+   * PID/process
+   * Related evidence
+   * Timeline events
+   * Relationships
+
+7. Investigation Search
+   Search across:
+
+   * PID
+   * Process name
+   * DLL
+   * IP
+   * Port
+   * Command line
+   * Evidence ID
+   * Relationship type
+
+8. Report View
+   Generate a professional investigation report containing:
+
+   * Case information
+   * Image hash
+   * Analysis summary
+   * Plugin execution summary
+   * Evidence summary
+   * Important relationships
+   * Timeline
+   * Hypotheses
+   * Evidence IDs/provenance
+   * Limitations
+   * Explicit statement that hypotheses require analyst validation
+
+## PHASE 2 — Frontend/Backend Integration
+
+Do not use mock forensic data for normal application behavior.
+
+Every dashboard value must come from the actual backend APIs/database.
+
+Synthetic fixtures may only be used for automated tests and must be clearly labelled as TEST FIXTURE.
+
+Verify that:
+
+* frontend API calls work
+* loading states work
+* empty states work
+* backend errors are displayed properly
+* Volatility failures do not crash the application
+* malformed plugin output does not crash the application
+* missing plugins are reported clearly
+* missing memory images are handled correctly
+
+Fix all broken routes, API mismatches, console errors, 404s, and frontend/backend integration issues.
+
+The favicon 404 is not a functional problem, but fix it if appropriate.
+
+## PHASE 3 — Real Volatility Validation
+
+The environment does not currently contain a genuine Windows memory capture.
+
+Therefore:
+
+DO NOT fabricate successful forensic results.
+
+Create a clear distinction between:
+
+* REAL ANALYSIS
+* TEST FIXTURE
+
+When a genuine Windows memory image is eventually uploaded:
+
+1. calculate SHA-256
+2. execute supported Volatility plugins
+3. preserve raw output
+4. preserve parseable JSON
+5. normalize evidence
+6. create deterministic relationships
+7. build timeline
+8. generate hypotheses
+9. expose everything in the investigator UI
+
+Make sure the implementation is ready for this real workflow.
+
+## PHASE 4 — Correlation Validation
+
+Review every correlation rule.
+
+Only create a relationship when there is an explicit evidence-backed basis.
+
+Examples:
+
+PARENT_CHILD:
+child.PPID == parent.PID
+
+CONNECTS_TO:
+network PID == process PID
+
+LOADS_DLL:
+DLL PID == process PID
+
+EXECUTED_WITH:
+command PID == process PID
+
+Do not create relationships merely because two artifacts look suspicious.
+
+Store for every relationship:
+
+* relationship ID
+* source evidence ID
+* target evidence ID
+* relationship type
+* deterministic reason
+* source fields used
+* confidence/evidence level
+
+## PHASE 5 — Timeline Validation
+
+Ensure:
+
+* events are sorted chronologically when timestamps exist
+* timestamps are never invented
+* missing timestamps are represented explicitly
+* each event points to Evidence ID
+* duplicate events are handled safely
+
+## PHASE 6 — Hypothesis Engine Review
+
+The hypothesis engine must be evidence-driven.
+
+Use language such as:
+
+* "Possible sequence"
+* "Observed evidence indicates..."
+* "This relationship may suggest..."
+* "Requires analyst validation"
+
+Never say:
+
+* "Confirmed attack"
+* "Confirmed malware"
+* "Attacker definitely did X"
+
+unless the underlying evidence actually establishes that fact.
+
+## PHASE 7 — Testing
+
+Run the complete test suite.
+
+Create/verify tests for:
+
+* upload
+* SHA-256 calculation
+* case creation
+* Volatility execution
+* successful plugin execution
+* plugin failure persistence
+* malformed JSON handling
+* JSON preservation
+* evidence normalization
+* parent-child correlation
+* process-network correlation
+* process-DLL correlation
+* process-command correlation
+* timeline generation
+* hypothesis generation
+* API endpoints
+* report generation
+
+Fix all failing tests.
+
+## PHASE 8 — Final UI Quality
+
+Make the interface look like a professional DFIR/SOC investigation platform.
+
+Use:
+
+* clean dark forensic/SOC-style interface
+* clear information hierarchy
+* cards/statistics
+* tables
+* graph visualization
+* timeline visualization
+* evidence badges
+* readable typography
+* responsive layout
+
+Avoid unnecessary animations and decorative UI.
+
+The application should feel like an investigator's tool, not a generic AI dashboard.
+
+## PHASE 9 — Final Verification
+
+Before saying the project is complete, verify:
+
+[ ] Application starts successfully
+[ ] Case creation works
+[ ] Upload works
+[ ] SHA-256 works
+[ ] Volatility runner works
+[ ] Raw output preserved
+[ ] JSON output preserved
+[ ] Plugin failures persisted
+[ ] Evidence normalization works
+[ ] Relationships work
+[ ] Timeline works
+[ ] Hypotheses work
+[ ] Investigator UI works
+[ ] Evidence inspector works
+[ ] Search/filter works
+[ ] Report generation works
+[ ] Tests pass
+[ ] No critical console errors
+[ ] No broken API routes
+[ ] No fake forensic results
+[ ] Real Windows memory capture can be plugged into the pipeline
+
+## IMPORTANT
+
+Do not stop after making the UI.
+
+Do not replace the real backend with mock data.
+
+Do not rewrite working components unnecessarily.
+
+First inspect the current implementation, identify missing pieces, implement them incrementally, run tests, and verify the browser preview.
+
+At the end, provide:
+
+1. What was completed
+2. What was fixed
+3. Test results
+4. Current application status
+5. Remaining limitations
+6. Exact steps for testing CyberTrace with a genuine Windows memory image
+7. Exact commands needed to run CyberTrace locally if applicable
+8. A concise final demo flow for the project presentation
+
+Do not claim 100% accuracy or confirmed attack reconstruction.
+The project must remain evidence-driven and investigator-verifiable.

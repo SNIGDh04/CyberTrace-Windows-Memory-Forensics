@@ -1,0 +1,100 @@
+Do not add new features yet.
+
+The current CyberTrace implementation has reached the core MVP stage. I now want a FINAL VERIFICATION and BUG-FIX pass.
+
+First inspect the existing project and run the complete test suite:
+
+uv run python -m unittest discover -s tests -v
+
+Then start/verify the application using:
+
+uv run uvicorn backend.app:app --host 0.0.0.0 --port 5000
+
+Now verify the complete user flow:
+
+1. Create a case
+2. Upload a memory image
+3. Calculate and display SHA-256
+4. Execute Volatility plugins
+5. Preserve raw output
+6. Preserve parseable JSON output
+7. Persist plugin failures without crashing the application
+8. Normalize evidence
+9. Create deterministic relationships
+10. Build timeline
+11. Build evidence graph
+12. Generate possible attack sequence
+13. Display supporting evidence IDs
+14. Open Evidence Inspector
+15. Generate investigation report
+
+IMPORTANT:
+
+Do NOT use fake forensic data for normal application behavior.
+
+If the environment does not contain a genuine Windows memory capture, use only clearly labelled TEST/DEMO fixtures and make sure the UI explicitly says:
+
+"TEST/DEMO DATA — NOT REAL FORENSIC EVIDENCE"
+
+Do not claim that real forensic analysis has been validated unless an actual Windows memory image was processed by Volatility 3.
+
+Audit the following correlation rules:
+
+PARENT_CHILD:
+child.PPID == parent.PID
+
+CONNECTS_TO:
+network.PID == process.PID
+
+LOADS_DLL:
+dll.PID == process.PID
+
+EXECUTED_WITH:
+command.PID == process.PID
+
+INJECTED_CODE:
+malfind.PID == process.PID
+
+Every relationship must retain:
+
+* source evidence ID
+* target evidence ID
+* relationship type
+* reason
+* source plugin
+* confidence/evidence classification
+
+Check that no hypothesis is presented as confirmed fact.
+
+Use:
+OBSERVED
+CORRELATED
+HYPOTHESIS
+
+Check all frontend/backend API calls and fix:
+
+* 404 errors
+* 500 errors
+* console errors
+* broken routes
+* missing loading states
+* broken empty states
+* broken error handling
+
+Run the complete test suite again after fixes.
+
+Do not rewrite working components unnecessarily.
+
+At the end, report exactly:
+
+1. Tests passed
+2. Tests failed
+3. Features verified
+4. Features not verified
+5. Remaining bugs
+6. Whether real Volatility 3 execution was actually tested
+7. Whether a genuine Windows memory image was processed
+8. Exact steps I should follow to demonstrate the application
+
+Do not publish the application yet.
+Focus only on correctness and verification.

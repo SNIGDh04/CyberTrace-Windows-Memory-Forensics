@@ -1,0 +1,1 @@
+"""Observed artifact models and Volatility output normalization."""
