@@ -1,0 +1,13 @@
+{
+  "name": "cybertrace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Evidence-driven attack reconstruction from volatile memory.",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "start": "node server.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  }
+}

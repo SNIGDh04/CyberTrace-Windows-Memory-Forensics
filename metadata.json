@@ -1,0 +1,5 @@
+{
+  "name": "CyberTrace",
+  "description": "Evidence-driven volatile-memory investigation workspace for Windows memory forensics.",
+  "requestFramePermissions": []
+}
